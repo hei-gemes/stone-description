@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>石のことば</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Georgia', 'YuMincho', '游明朝', serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.8s ease;
+    }
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transition: border-color 0.8s ease;
+    }
+    .orb1 { top: -120px; right: -120px; width: 400px; height: 400px; }
+    .orb2 { bottom: -80px; left: -80px; width: 280px; height: 280px; }
+    .grain { position: fixed; inset: 0; pointer-events: none; z-index: 0; transition: all 0.8s ease; }
+    .container { position: relative; z-index: 1; width: 100%; max-width: 480px; }
+    .header { text-align: center; margin-bottom: 2.5rem; }
+    .header-sub { font-size: 0.65rem; letter-spacing: 0.3em; opacity: 0.7; margin-bottom: 0.5rem; text-transform: uppercase; transition: color 0.8s ease; }
+    .header-title { font-size: 1.6rem; font-weight: normal; letter-spacing: 0.05em; transition: color 0.8s ease; }
+    .header-line { width: 40px; height: 1px; margin: 1rem auto 0; opacity: 0.5; transition: background 0.8s ease; }
+    .selector { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+    .stone-btn { background: transparent; border-radius: 999px; padding: 0.35rem 0.9rem; font-size: 0.75rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .card { border-radius: 16px; padding: 2.5rem 2rem; transition: border-color 0.8s ease, background 0.8s ease; }
+    .stone-icon { text-align: center; margin-bottom: 1.5rem; }
+    .stone-emoji { font-size: 3rem; display: block; margin-bottom: 0.5rem; transition: filter 0.8s ease; }
+    .stone-name { font-size: 1.2rem; font-weight: normal; letter-spacing: 0.15em; transition: color 0.8s ease; }
+    .intro-text { text-align: center; opacity: 0.5; font-size: 0.8rem; line-height: 1.8; margin-bottom: 1.8rem; transition: color 0.8s ease; }
+    .reveal-btn { display: block; margin: 0 auto; border: none; border-radius: 999px; padding: 0.7rem 2rem; font-size: 0.8rem; letter-spacing: 0.12em; cursor: pointer; font-family: inherit; transition: opacity 0.2s, background 0.8s ease, color 0.8s ease; }
+    .reveal-btn:hover { opacity: 0.8; }
+    .description { font-size: 0.88rem; line-height: 2.0; letter-spacing: 0.04em; white-space: pre-wrap; opacity: 0.9; margin-bottom: 1.5rem; transition: color 0.8s ease; }
+    .divider { height: 1px; margin-bottom: 1.5rem; transition: background 0.8s ease; }
+    .back-btn { display: block; margin: 0 auto; background: transparent; border: none; opacity: 0.4; font-size: 0.72rem; letter-spacing: 0.08em; cursor: pointer; font-family: inherit; transition: color 0.8s ease; }
+    .footer-note { text-align: center; opacity: 0.2; font-size: 0.65rem; letter-spacing: 0.12em; margin-top: 2rem; text-transform: uppercase; transition: color 0.8s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+  </style>
+</head>
+<body>
+<div class="grain" id="grain"></div>
+<div class="orb orb1" id="orb1"></div>
+<div class="orb orb2" id="orb2"></div>
+<div class="container">
+  <div class="header">
+    <p class="header-sub" id="header-sub">Natural Stone Archive</p>
+    <h1 class="header-title" id="header-title">石のことば</h1>
+    <div class="header-line" id="header-line"></div>
+  </div>
+  <div class="selector" id="selector"></div>
+  <div class="card" id="card">
+    <div class="stone-icon">
+      <span class="stone-emoji" id="emoji"></span>
+      <h2 class="stone-name" id="stone-name"></h2>
+    </div>
+    <div id="phase-select">
+      <p class="intro-text" id="intro-text">あなたの石にまつわる<br>ことばを、そっとひらきます</p>
+      <button class="reveal-btn" id="reveal-btn" onclick="showDescription()">ことばを見る</button>
+    </div>
+    <div id="phase-view" style="display:none;">
+      <p class="description" id="description"></p>
+      <div class="divider" id="divider"></div>
+      <button class="back-btn" id="back-btn" onclick="showSelect()">← ほかの石を見る</button>
+    </div>
+  </div>
+  <p class="footer-note" id="footer-note">このページはQRコードからアクセスできます</p>
+</div>
+<script>
+  const STONES = [
+    { id: "amethyst", label: "アメジスト", emoji: "💜", description: "深い紫をたたえた水晶。古代ギリシャでは月の女神に守られた石とされ、聖職者や王たちが心の鎮まりを求めて身につけてきました。\n\nその色は、夜と暁のあわい。揺れる思考をしずめ、本当に大切なものへ意識を向けてくれる、静寂の守り手です。" },
+    { id: "rose_quartz", label: "ローズクォーツ", emoji: "🌸", description: "やわらかな桃色に包まれた、愛と慈しみの石。古代ローマでは美の女神ヴィーナスにささげられ、永遠の若さを願う人々に愛されてきました。\n\n主な産地はマダガスカルやブラジル。あなた自身を、そして大切な誰かを、やさしいまなざしで包みなおすための石です。" },
+    { id: "obsidian", label: "オブシディアン", emoji: "🖤", description: "火山が生み出した、漆黒のガラス。古代の人々はこの石を磨いて鏡とし、自らの内面を映す道具として用いてきました。\n\n闇のようでいて、光をやわらかく弾く深い艶。迷いや不要なものを払い、あなたの輪郭を、はっきりと際立たせてくれます。" },
+    { id: "moonstone", label: "ムーンストーン", emoji: "🌙", description: "表面に月光のような青い揺らぎを宿す石。古代インドでは月の女神の涙が固まったと信じられ、旅人を守るお守りとされてきました。\n\n主な産地はスリランカ。新しい一歩を踏みだすとき、闇夜のなかでも道を照らす月のように、あなたの直感をそっと導いてくれます。" },
+    { id: "citrine", label: "シトリン", emoji: "✨", description: "黄金の光をその身に宿した、太陽の石。古代から商人たちに愛され「繁栄の石」「富の石」と呼ばれて受け継がれてきました。\n\n主な産地はブラジル。明るく澄んだ黄色は、かたくなった心を解き、新しい挑戦への活力と自信を、静かに灯してくれます。" },
+  ];
+  const COLORS = {
+    amethyst:    { bg: "#1a0a2e", accent: "#c084fc", text: "#ede9fe", grain: "#7c3aed" },
+    rose_quartz: { bg: "#2d1a1f", accent: "#f9a8d4", text: "#fdf2f8", grain: "#be185d" },
+    obsidian:    { bg: "#0a0a0a", accent: "#a1a1aa", text: "#f4f4f5", grain: "#3f3f46" },
+    moonstone:   { bg: "#0f172a", accent: "#bae6fd", text: "#f0f9ff", grain: "#0284c7" },
+    citrine:     { bg: "#1c1200", accent: "#fcd34d", text: "#fffbeb", grain: "#d97706" },
+  };
+  let current = "amethyst";
+  function applyColors(id) {
+    const c = COLORS[id];
+    document.body.style.background = c.bg;
+    document.getElementById("grain").style.backgroundImage = `radial-gradient(ellipse at 30% 20%, ${c.grain}22 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, ${c.grain}18 0%, transparent 50%)`;
+    document.getElementById("orb1").style.border = `1px solid ${c.accent}22`;
+    document.getElementById("orb2").style.border = `1px solid ${c.accent}18`;
+    document.getElementById("header-sub").style.color = c.accent;
+    document.getElementById("header-title").style.color = c.text;
+    document.getElementById("header-line").style.background = c.accent;
+    document.getElementById("card").style.background = `linear-gradient(135deg, ${c.accent}08 0%, transparent 100%)`;
+    document.getElementById("card").style.border = `1px solid ${c.accent}30`;
+    document.getElementById("stone-name").style.color = c.accent;
+    document.getElementById("intro-text").style.color = c.text;
+    document.getElementById("reveal-btn").style.background = c.accent;
+    document.getElementById("reveal-btn").style.color = c.bg;
+    document.getElementById("description").style.color = c.text;
+    document.getElementById("divider").style.background = `linear-gradient(to right, transparent, ${c.accent}44, transparent)`;
+    document.getElementById("back-btn").style.color = c.text;
+    document.getElementById("footer-note").style.color = c.text;
+    document.getElementById("emoji").style.filter = `drop-shadow(0 0 20px ${c.accent}66)`;
+    document.querySelectorAll(".stone-btn").forEach(btn => {
+      const id2 = btn.dataset.id;
+      if (id2 === id) {
+        btn.style.background = c.accent + "22";
+        btn.style.border = `1px solid ${c.accent}`;
+        btn.style.color = c.accent;
+      } else {
+        btn.style.background = "transparent";
+        btn.style.border = `1px solid ${c.accent}44`;
+        btn.style.color = c.text + "88";
+      }
+    });
+  }
+  function selectStone(id) {
+    current = id;
+    const stone = STONES.find(s => s.id === id);
+    document.getElementById("emoji").textContent = stone.emoji;
+    document.getElementById("stone-name").textContent = stone.label;
+    document.getElementById("description").textContent = stone.description;
+    applyColors(id);
+    showSelect();
+    const card = document.getElementById("card");
+    card.classList.remove("fade-in");
+    void card.offsetWidth;
+    card.classList.add("fade-in");
+  }
+  function showSelect() {
+    document.getElementById("phase-select").style.display = "block";
+    document.getElementById("phase-view").style.display = "none";
+  }
+  function showDescription() {
+    document.getElementById("phase-select").style.display = "none";
+    document.getElementById("phase-view").style.display = "block";
+    const card = document.getElementById("card");
+    card.classList.remove("fade-in");
+    void card.offsetWidth;
+    card.classList.add("fade-in");
+  }
+  function getInitialStone() {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("stone");
+    return STONES.find(x => x.id === s) ? s : "amethyst";
+  }
+  const selector = document.getElementById("selector");
+  STONES.forEach(stone => {
+    const btn = document.createElement("button");
+    btn.className = "stone-btn";
+    btn.dataset.id = stone.id;
+    btn.textContent = stone.label;
+    btn.onclick = () => selectStone(stone.id);
+    selector.appendChild(btn);
+  });
+  selectStone(getInitialStone());
+</script>
+</body>
+</html>
